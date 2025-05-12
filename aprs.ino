@@ -238,17 +238,40 @@ void tx_aprs(void)
     );
   */  
 
+ char bmeT[8] = "-80.00"; 
+ char bmeP[8] = "1013.25";
+ char bmeH[8] = "99.99";
+ char bmeR[8] = "14000";
+ char scdCO2[9] = "40000.00";
+ char scdT[8] = "-70.00";
+ #ifdef Activate_BME680
+ dtostrf(bme.temperature, 0, 2, bmeT);  // minimal width 0, 2 BC
+ dtostrf(bme.pressure / 100.0, 0, 2, bmeP);  // minimal width 0, 2 BC
+ dtostrf(bme.humidity, 0, 2, bmeH);  // minimal width 0, 2 BC
+ dtostrf(bme.gas_resistance / 1000.0, 0, 0, bmeR);  // minimal width 0, 0 BC
+ #endif
+
+ #ifdef Activate_SCD30
+ dtostrf(co2, 0, 2, scdCO2);  // minimal width 0, 2 BC
+ dtostrf(temp, 0, 2, scdT);  // minimal width 0, 2 BC
+ #endif
 
     ax25_frame(
-    APRS_CALLSIGN, APRS_SSID, //ON6GMZ - 11
+    APRS_CALLSIGN, APRS_SSID, // ON6GMZ - 11
     APRS_DEVID, 0, 
-    0, 1, //WIDE 2-1
-    "!/%s%sO   /A=%06ld|Sat:%d, Count:%d",
+    0, 1, // WIDE2-1
+    "!/%s%sO   /A=%06ld|%d,%s,%s,%s,%s,%s,%s,%d abcdefghijklmnop",// 7 characters room
     slat, slng,
     aprs_alt_ft,
     GPS.Satellites,
+    bmeT,
+    bmeP,
+    bmeH,
+    bmeR,
+    scdCO2,
+    scdT,
     messagesTransmitted
-    );
+);
     
     /*
     ax25_frame(

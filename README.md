@@ -1,8 +1,8 @@
-## PhoenixTrack
+## StaticTrack
 
-Simplified Arduino-based tracker software based on APRS to send live GPS and sensor data. Based upon the work in [https://github.com/daveake/FlexTrack](https://github.com/daveake/FlexTrack).
+Static Arduino-based tracker software for RTTY and APRS.
 
-This fork is configured for Habduino v5 boards.
+This fork is configured for Habduino boards. 
 
 This code provides simultaneous (where legal and supported by the hardware installed) transmission of radio telemetry via RTTY and APRS on Habduino Arduino addon boards for High Altitude Ballooning.
 
