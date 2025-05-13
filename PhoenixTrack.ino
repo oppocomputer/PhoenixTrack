@@ -22,7 +22,6 @@
 #define Activate_GPS
 //#define Activate_SD
 #define Activate_BME680
-#define Activate_SCD30
 
 // APRS transmission conditions
 #define minimumSatellites 0                 //Amount of connected GPS satellites necessary to transmit APRS messages (to test can be set to 0)
@@ -37,7 +36,7 @@
 #define APRS_PRE_DEACTIVATION_TIME 100
 #define APRS_REACTIVATION_TIME 1000
 
-#define APRS_TX_INTERVAL      30                 // APRS Transmission Interval in seconds
+#define APRS_TX_INTERVAL      60                 // APRS Transmission Interval in seconds
 #define APRS_RANDOM          1                // Adjusts time to next transmission by up to +/1 this figure, in seconds.
                                                // So for interval of 60 (seconds), and random of 30 (seconds), each gap could be 30 - 90 seconds.
                                                // Set to 0 to disable!
@@ -45,7 +44,7 @@
 #define APRS_TELEM_INTERVAL  1                // How often to send telemetry packets.  Comment out to disable
 #define APRS_PRE_EMPHASIS                      // Comment out to disable 3dB pre-emphasis.
 
-#define APRS_DEVID "PHOENX"                     // APRS packet device id
+#define APRS_DEVID "PHOENIX"                     // APRS packet device id
 
 
 //------------------------------------------------------------------------------------------------------
@@ -75,19 +74,9 @@ struct GPSData {
 // GPS struct object
 GPSData GPS; 
 
-//SCD data
-float co2 = 0.0;
-float temp = 0.0;
-float hum = 0.0;
-
-
 //States
 bool enabled = false;
 bool disableGPS = false;
-
-unsigned long lastBMEtime {0};
-unsigned long lastSCDtime {0};
-unsigned long cMillis {0};
 
 #ifdef Activate_GPS
   #include <SoftwareSerial.h>
@@ -105,12 +94,6 @@ unsigned long cMillis {0};
   Adafruit_BME680 bme; // I2C
 #endif
 
-
-#ifdef Activate_SCD30
-  #include "SensirionI2cScd30.h"
-
-  SensirionI2cScd30 scd30;
-#endif
 //------------------------------------------------------------------------------------------------------
 
 
@@ -155,14 +138,18 @@ void setup() {
   #endif
 
   #ifdef Activate_BME680
-    Serial.println(F("BME enabled."));
-    SetupBME680();
+    while (!bme.begin()) {
+      Serial.println(F("Could not find a valid BME680 sensor! Retrying..."));
+      delay(1000);
+    }
+
+    bme.setTemperatureOversampling(BME680_OS_8X);
+    bme.setHumidityOversampling(BME680_OS_2X);
+    bme.setPressureOversampling(BME680_OS_4X);
+    bme.setIIRFilterSize(BME680_FILTER_SIZE_3);
+    bme.setGasHeater(320, 150); // 320*C for 150 ms
   #endif 
 
-  #ifdef Activate_SCD30
-    Serial.println(F("SCD enabled."));
-    SetupSCD30();
-  #endif 
 
   Serial.print(F("Free memory = "));
   Serial.println(freeRam());
@@ -184,15 +171,8 @@ void loop() {
     CheckSD(millis());
   #endif
 
-  #ifdef Activate_BME680
-    CheckBME680(millis());
-  #endif
-  
-  #ifdef Activate_SCD30
-    CheckSCD30(millis());
-  #endif
-
   UpdateLEDS(enabled);
+
 }
 
 
